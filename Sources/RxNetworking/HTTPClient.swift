@@ -24,6 +24,7 @@ public class HTTPClient<Target: TargetType> {
         return Disposables.create()
       }
       
+      task.resume()
       
       return Disposables.create {
         task.cancel()
@@ -47,8 +48,8 @@ public class HTTPClient<Target: TargetType> {
     case .plain:
       return session.dataTask(with: request.request, completionHandler: completion(data:response:error:))
     case .parametered(let parameters, let encoding):
-      request.append(parameters: parameters, encoding: encoding)
-      return session.dataTask(with: request.request, completionHandler: completion(data:response:error:))
+      let newRequest = request.appending(parameters: parameters, encoding: encoding)
+      return session.dataTask(with: newRequest, completionHandler: completion(data:response:error:))
     }
   }
 }

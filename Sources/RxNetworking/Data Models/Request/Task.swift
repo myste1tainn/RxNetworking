@@ -8,3 +8,4 @@ public enum Task {
   case plain
   case parametered(with: Encodable, encoding: Parameter.Encoding)
 }
+

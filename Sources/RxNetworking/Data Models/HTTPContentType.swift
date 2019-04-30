@@ -12,7 +12,7 @@ public enum HTTPContentType {
   case html
   case form(_ subtype: FormSubType)
   
-  var name: String {
+  private var name: String {
     switch self {
     case .text: return "text"
     case .json: return "json"
