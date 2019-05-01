@@ -13,4 +13,10 @@ public struct HTTPResponse {
     self.httpURLResponse = httpURLResponse
     self.data = data
   }
+  
+  public func map<T: Decodable>(_ type: T.Type) throws -> T {
+    let decoder = JSONDecoder()
+    let result = try decoder.decode(type, from: data)
+    return result
+  }
 }
