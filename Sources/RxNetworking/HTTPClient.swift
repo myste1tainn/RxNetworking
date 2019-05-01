@@ -5,7 +5,7 @@
 import Foundation
 import RxSwift
 
-public class HTTPClient<Target: TargetType> {
+open class HTTPClient<Target: TargetType> {
   
   var sessionConfiguration: URLSessionConfiguration
   var plugins: [PluginType]
@@ -18,7 +18,7 @@ public class HTTPClient<Target: TargetType> {
     self.plugins = plugins
   }
   
-  public func request(_ target: Target) -> Single<HTTPResponse> {
+  open func request(_ target: Target) -> Single<HTTPResponse> {
     return Single.create { [weak self] observer in
       guard let task = self?.createTask(target: target, observer: observer) else {
         return Disposables.create()

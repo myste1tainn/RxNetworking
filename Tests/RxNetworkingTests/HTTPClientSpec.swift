@@ -6,6 +6,7 @@ import RxSwift
 
 final class HTTPClientSpec: QuickSpec {
   override func spec() {
+    // TODO: killall is too drastic, will have to find it's pid and kill it that way.
     shell("killall", "-9", "node")
     shell("rm", "-rf", "db.json")
     exec("json-server", "db.json")

@@ -5,6 +5,6 @@
 import Foundation
 
 extension URLQueryEncoding {
-  public class Container {
+  open class Container {
   }
 }
