@@ -6,12 +6,15 @@ import Foundation
 
 public struct HTTPRequest {
   
-  public var request: URLRequest {
+  public var urlRequest: URLRequest {
     let url = target.baseURL.appendingPathComponent(target.path)
     var request = URLRequest(url: url)
     request.allHTTPHeaderFields = target.headers
-    let method = target.method.rawValue
-    request.httpMethod = method
+    request.httpMethod = target.method.rawValue
+    request = appending(to: request, byTask: target.task)
+    if let authorizable = target as? AccessTokenAuthorizable {
+      request = appending(to: request, byAuthorizable: authorizable)
+    }
     return request
   }
   
@@ -21,8 +24,38 @@ public struct HTTPRequest {
     self.target = target
   }
   
-  public func appending(parameters: Encodable, encoding: Parameter.Encoding) -> URLRequest {
-    var request = self.request
+  private func ensureHeadersProperty(to request: URLRequest) -> URLRequest {
+    if request.allHTTPHeaderFields == nil {
+      var request = request
+      request.allHTTPHeaderFields = [:]
+      return request
+    } else {
+      return request
+    }
+  }
+  
+  public func appending(to request: URLRequest, byAuthorizable target: AccessTokenAuthorizable) -> URLRequest {
+    let headerKey = target.authenticationHeader
+    let prefix = target.authenticationType.value
+    let headerValuePrefix = prefix.isEmpty ? prefix : prefix + " "
+    var request = ensureHeadersProperty(to: request)
+    request.allHTTPHeaderFields?[headerKey] = "\(headerValuePrefix)"
+    return request
+  }
+  
+  public func appending(to request: URLRequest, byTask task: Task) -> URLRequest {
+    switch task {
+    case .plain: return request
+    case .parametered(let parameters, let encoding): return appending(parameters: parameters,
+                                                                      encoding: encoding,
+                                                                      to: request)
+    }
+  }
+  
+  public func appending(parameters: Encodable,
+                        encoding: Parameter.Encoding,
+                        to request: URLRequest) -> URLRequest {
+    var request = request
     let anyEncodable = AnyEncodable(parameters)
     switch encoding {
     case .query:

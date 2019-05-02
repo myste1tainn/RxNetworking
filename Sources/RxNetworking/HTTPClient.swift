@@ -46,10 +46,9 @@ open class HTTPClient<Target: TargetType> {
     
     switch target.task {
     case .plain:
-      return session.dataTask(with: request.request, completionHandler: completion(data:response:error:))
-    case .parametered(let parameters, let encoding):
-      let newRequest = request.appending(parameters: parameters, encoding: encoding)
-      return session.dataTask(with: newRequest, completionHandler: completion(data:response:error:))
+      return session.dataTask(with: request.urlRequest, completionHandler: completion(data:response:error:))
+    case .parametered:
+      return session.dataTask(with: request.urlRequest, completionHandler: completion(data:response:error:))
     }
   }
 }
