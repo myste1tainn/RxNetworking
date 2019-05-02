@@ -4,62 +4,43 @@ import Nimble
 import RxSwift
 @testable import RxNetworking
 
-final class HTTPClientTargetTypeSpec: QuickSpec {
+final class HTTPRequestSpec: QuickSpec {
   override func spec() {
-    // TODO: killall is too drastic, will have to find it's pid and kill it that way.
-    shell("killall", "-9", "node")
-    shell("rm", "-rf", "db.json")
-    exec("json-server", "db.json")
-    sleep(1)
-    var client: HTTPClient<TestTarget>!
+    var request: HTTPRequest!
     let bag = DisposeBag()
     describe("HTTPClient") {
       beforeEach { client = .init() }
       
-      context("POST posts") {
-        it("make request ok-ish") {
-          let post = Post(id: 2, title: "hello world!", createdAt: Date())
-          client.request(.posts(.post(post)))
-                .expectation(bag: bag, { (response: HTTPResponse) in
-                  expect(response.statusCode) > 199
-                  expect(response.statusCode) < 300
-                  expect(response.data).toNot(beNil())
-                }, { (error: Error) in
-                               expect(error).to(beNil())
-                             })
+      context("when target required basic authentication") {
+        var request: URLRequest!
+        
+        beforeEach {
+          TestTarget.authenticationType = .basic
         }
+        
+        context("#composeRequest") {
+          
+          beforeEach {
+            request = client.composeRequest()
+          }
+          
+          it("add authorization basic to header") {
+            expect(request.allHTTPHeaderFields?.keys).to(contain("Authorization"))
+            let header = request.allHTTPHeaderFields?.first { $0.key == "Authorization" }
+            expect(header?.value).to(contain("Basic"))
+          }
+          
+        }
+        
       }
       
-      context("GET posts") {
-        it("contains POSTed item") {
-          client.request(.posts(.get))
-                .expectation(bag: bag) {
-                  expect($0.statusCode) > 199
-                  expect($0.statusCode) < 300
-                  let string = String(data: $0.data, encoding: .utf8)
-                  expect(string).toNot(beNil())
-                  expect(string).to(contain("\"id\": 2"))
-                }
-        }
-      }
-      
-      context("DELETE posts") {
-        it("remove specified item") {
-          client.request(.posts(.delete("2")))
-                .flatMap { _ in client.request(.posts(.get)) }
-                .expectation(bag: bag) {
-                  expect($0.statusCode) > 199
-                  expect($0.statusCode) < 300
-                  let string = String(data: $0.data, encoding: .utf8)
-                  expect(string).toNot(beNil())
-                  expect(string).toNot(contain("\"id\": 2"))
-                }
-        }
+      context("when target required custom authentication") {
+        
       }
     }
   }
   
-  enum TestTarget: TargetType {
+  enum TestTarget: AccessTokenAuthorizable {
     enum Method {
       case get
       case put(_ id: String)
@@ -79,6 +60,12 @@ final class HTTPClientTargetTypeSpec: QuickSpec {
     case profile(_ method: Method)
     case posts(_ method: Method)
     case comments(_ method: Method)
+    
+    static var authenticationType = AuthenticationType.basic
+    
+    var authenticationType: AuthenticationType {
+      return type(of: self).authenticationType
+    }
     
     var baseURL: URL {
       return URL(string: "http://localhost:3000")!
