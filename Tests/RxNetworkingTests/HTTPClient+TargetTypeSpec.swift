@@ -4,7 +4,7 @@ import Nimble
 import RxSwift
 @testable import RxNetworking
 
-final class HTTPClientSpec: QuickSpec {
+final class HTTPClientTargetTypeSpec: QuickSpec {
   override func spec() {
     // TODO: killall is too drastic, will have to find it's pid and kill it that way.
     shell("killall", "-9", "node")
