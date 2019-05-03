@@ -14,7 +14,10 @@ final class HTTPClientSpec: QuickSpec {
     var client: HTTPClient<TestTarget>!
     let bag = DisposeBag()
     describe("HTTPClient") {
-      beforeEach { client = .init() }
+      beforeEach { client = .init(plugins: [
+        AccessTokenPlugin(tokenSingle: .just("TOKEN_TEST")),
+        LoggerPlugin()
+      ]) }
       
       context("POST posts") {
         it("make request ok-ish") {
@@ -59,7 +62,16 @@ final class HTTPClientSpec: QuickSpec {
     }
   }
   
-  enum TestTarget: TargetType {
+  enum TestTarget: AccessTokenAuthorizable {
+    
+    var authenticationHeader: String {
+      return "X-Myste1tainn-Token"
+    }
+    
+    var authenticationType: AuthenticationType {
+      return .custom("Myste1tainn")
+    }
+  
     enum Method {
       case get
       case put(_ id: String)

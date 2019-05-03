@@ -19,9 +19,18 @@ open class HTTPClient<Target: TargetType> {
   }
   
   open func request(_ target: Target) -> Single<HTTPResponse> {
-    return Single.create { [weak self] observer in
-      guard let task = self?.createTask(target: target, observer: observer) else {
-        return Disposables.create()
+    return urlRequest(target: target).flatMap(send(request:))
+  }
+  
+  private func send(request: URLRequest) -> Single<HTTPResponse> {
+    let session = URLSession(configuration: sessionConfiguration)
+    return Single<HTTPResponse>.create { observer in
+      let task = session.dataTask(with: request) { (data: Data?, response: URLResponse?, error: Error?) -> Void in
+        if let error = error {
+          observer(.error(error))
+        } else if let data = data, let response = response as? HTTPURLResponse {
+          observer(.success(HTTPResponse(httpURLResponse: response, data: data)))
+        }
       }
       
       task.resume()
@@ -29,26 +38,26 @@ open class HTTPClient<Target: TargetType> {
       return Disposables.create {
         task.cancel()
       }
+    }.flatMap(callingDelegateReceivedResponseFor(request: request))
+  }
+  
+  private func callingDelegateReceivedResponseFor(request: URLRequest) -> (HTTPResponse) -> Single<HTTPResponse> {
+    return { [weak self] response in
+      guard let _self = self else { return Single.just(response) }
+      return _self.plugins.reduce(Single.just(response)) { (single, plugin) in
+        single.flatMap { try plugin.didSend(request: request, received: $0) }
+      }
     }
   }
   
-  private func createTask(target: Target, observer: @escaping (SingleEvent<HTTPResponse>) -> Void) -> URLSessionTask {
-    let session = URLSession(configuration: sessionConfiguration)
+  private func urlRequest(target: Target) -> Single<URLRequest> {
     let request = HTTPRequest(target: target)
     
-    func completion(data: Data?, response: URLResponse?, error: Error?) {
-      if let error = error {
-        observer(.error(error))
-      } else if let data = data, let response = response as? HTTPURLResponse {
-        observer(.success(HTTPResponse(httpURLResponse: response, data: data)))
-      }
+    /// Concatenate each of single from plugin into 1 stream with flatMap
+    let urlRequestSingle = plugins.reduce(Single.just(request.urlRequest)) { (single, plugin) in
+      single.flatMap { try plugin.willSend(httpRequest: request, request: $0) }
     }
     
-    switch target.task {
-    case .plain:
-      return session.dataTask(with: request.urlRequest, completionHandler: completion(data:response:error:))
-    case .parametered:
-      return session.dataTask(with: request.urlRequest, completionHandler: completion(data:response:error:))
-    }
+    return urlRequestSingle
   }
 }
