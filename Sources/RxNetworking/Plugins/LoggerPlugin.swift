@@ -28,10 +28,9 @@ extension URLRequest: CustomStringConvertible {
     
     return """
            curl -X \(self.httpMethod ?? "") \\
-                -d '\(body)' \\
                 \(headers) \\
+                -d '\(body)' \\
                 '\(self.url?.absoluteString ?? "")' -vs
-           
            """
   }
 }
