@@ -36,7 +36,7 @@ public class AccessTokenPlugin: PluginType {
   
   private func authHeaderTuple(httpRequest: HTTPRequest, request: URLRequest) -> (key: String, value: String)? {
     guard let target = httpRequest.target as? AccessTokenAuthorizable,
-          let tuple = request.allHTTPHeaderFields?.first(where: { $0.key == target.authenticationHeader }) else {
+          let tuple = request.allHTTPHeaderFields?.first(where: { $0.key == target.authorizationHeader }) else {
       return nil
     }
     return tuple

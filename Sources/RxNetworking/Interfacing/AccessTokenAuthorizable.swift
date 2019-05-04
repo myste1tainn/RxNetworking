@@ -5,12 +5,12 @@
 import Foundation
 
 public protocol AccessTokenAuthorizable: TargetType {
-  var authenticationHeader: String { get }
-  var authenticationType: AuthenticationType { get }
+  var authorizationHeader: String { get }
+  var authorizationType:   AuthorizationType { get }
 }
 
-extension AccessTokenAuthorizable {
-  var authenticationHeader: String {
+public extension AccessTokenAuthorizable {
+  public var authorizationHeader: String {
     return "Authorization"
   }
 }

@@ -35,8 +35,8 @@ public struct HTTPRequest {
   }
   
   public func appending(to request: URLRequest, byAuthorizable target: AccessTokenAuthorizable) -> URLRequest {
-    let headerKey = target.authenticationHeader
-    let prefix = target.authenticationType.value
+    let headerKey = target.authorizationHeader
+    let prefix = target.authorizationType.value
     let headerValuePrefix = prefix.isEmpty ? prefix : prefix + " "
     var request = ensureHeadersProperty(to: request)
     request.allHTTPHeaderFields?[headerKey] = "\(headerValuePrefix)"

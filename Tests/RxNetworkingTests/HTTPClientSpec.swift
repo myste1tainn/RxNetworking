@@ -64,11 +64,11 @@ final class HTTPClientSpec: QuickSpec {
   
   enum TestTarget: AccessTokenAuthorizable {
     
-    var authenticationHeader: String {
+    var authorizationHeader: String {
       return "X-Myste1tainn-Token"
     }
     
-    var authenticationType: AuthenticationType {
+    var authorizationType: AuthorizationType {
       return .custom("Myste1tainn")
     }
   

@@ -23,7 +23,7 @@ final class HTTPRequestSpec: QuickSpec {
           
           context("required basic auth") {
             beforeEach {
-              AuthorizableTarget.authenticationType = .basic
+              AuthorizableTarget.authorizationType = .basic
             }
             
             it("add authorization basic to header") {
@@ -37,7 +37,7 @@ final class HTTPRequestSpec: QuickSpec {
           
           context("required bearer auth") {
             beforeEach {
-              AuthorizableTarget.authenticationType = .bearer
+              AuthorizableTarget.authorizationType = .bearer
             }
             
             it("add authorization basic to header") {
@@ -51,7 +51,7 @@ final class HTTPRequestSpec: QuickSpec {
           
           context("required custom value auth") {
             beforeEach {
-              AuthorizableTarget.authenticationType = .custom("Prefix")
+              AuthorizableTarget.authorizationType = .custom("Prefix")
             }
             
             it("add authorization basic to header") {
@@ -65,7 +65,7 @@ final class HTTPRequestSpec: QuickSpec {
           
           context("required custom empty auth") {
             beforeEach {
-              AuthorizableTarget.authenticationType = .custom("")
+              AuthorizableTarget.authorizationType = .custom("")
             }
             
             it("add authorization basic to header") {
@@ -84,7 +84,7 @@ final class HTTPRequestSpec: QuickSpec {
   
         let headerKey = "X-Custom-Header"
         beforeEach {
-          CustomHeaderAuthorizableTarget.authenticationHeader = headerKey
+          CustomHeaderAuthorizableTarget.authorizationHeader = headerKey
           httpRequest = .init(target: CustomHeaderAuthorizableTarget.posts(.get))
         }
     
@@ -92,7 +92,7 @@ final class HTTPRequestSpec: QuickSpec {
       
           context("required basic auth") {
             beforeEach {
-              CustomHeaderAuthorizableTarget.authenticationType = .basic
+              CustomHeaderAuthorizableTarget.authorizationType = .basic
             }
         
             it("add authorization basic to header") {
@@ -106,7 +106,7 @@ final class HTTPRequestSpec: QuickSpec {
       
           context("required bearer auth") {
             beforeEach {
-              CustomHeaderAuthorizableTarget.authenticationType = .bearer
+              CustomHeaderAuthorizableTarget.authorizationType = .bearer
             }
         
             it("add authorization basic to header") {
@@ -120,7 +120,7 @@ final class HTTPRequestSpec: QuickSpec {
       
           context("required custom value auth") {
             beforeEach {
-              CustomHeaderAuthorizableTarget.authenticationType = .custom("Prefix")
+              CustomHeaderAuthorizableTarget.authorizationType = .custom("Prefix")
             }
         
             it("add authorization basic to header") {
@@ -134,7 +134,7 @@ final class HTTPRequestSpec: QuickSpec {
       
           context("required custom empty auth") {
             beforeEach {
-              CustomHeaderAuthorizableTarget.authenticationType = .custom("")
+              CustomHeaderAuthorizableTarget.authorizationType = .custom("")
             }
         
             it("add authorization basic to header") {
@@ -173,16 +173,16 @@ final class HTTPRequestSpec: QuickSpec {
     case posts(_ method: Method)
     case comments(_ method: Method)
     
-    static var authenticationType = AuthenticationType.basic
+    static var authenticationType = AuthorizationType.basic
     
     static var authenticationHeader = "Authorization"
     
-    var authenticationHeader: String {
-      return type(of: self).authenticationHeader
+    var authorizationHeader: String {
+      return type(of: self).authorizationHeader
     }
     
-    var authenticationType: AuthenticationType {
-      return type(of: self).authenticationType
+    var authorizationType: AuthorizationType {
+      return type(of: self).authorizationType
     }
     
     var baseURL: URL {
@@ -255,10 +255,10 @@ final class HTTPRequestSpec: QuickSpec {
     case posts(_ method: Method)
     case comments(_ method: Method)
     
-    static var authenticationType = AuthenticationType.basic
+    static var authenticationType = AuthorizationType.basic
     
-    var authenticationType: AuthenticationType {
-      return type(of: self).authenticationType
+    var authorizationType: AuthorizationType {
+      return type(of: self).authorizationType
     }
     
     var baseURL: URL {
