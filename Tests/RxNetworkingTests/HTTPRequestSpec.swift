@@ -173,9 +173,9 @@ final class HTTPRequestSpec: QuickSpec {
     case posts(_ method: Method)
     case comments(_ method: Method)
     
-    static var authenticationType = AuthorizationType.basic
+    static var authorizationType = AuthorizationType.basic
     
-    static var authenticationHeader = "Authorization"
+    static var authorizationHeader = "Authorization"
     
     var authorizationHeader: String {
       return type(of: self).authorizationHeader
@@ -255,7 +255,7 @@ final class HTTPRequestSpec: QuickSpec {
     case posts(_ method: Method)
     case comments(_ method: Method)
     
-    static var authenticationType = AuthorizationType.basic
+    static var authorizationType = AuthorizationType.basic
     
     var authorizationType: AuthorizationType {
       return type(of: self).authorizationType

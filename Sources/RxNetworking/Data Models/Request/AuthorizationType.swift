@@ -4,11 +4,15 @@
 
 import Foundation
 
-public enum AuthorizationType {
+public enum AuthorizationType: Hashable {
   case none
   case basic
   case bearer
   case custom(_ value: String)
+  
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine("\(self)")
+  }
   
   var value: String {
     switch self {

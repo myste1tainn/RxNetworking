@@ -7,7 +7,7 @@ import Foundation
 public struct HTTPRequest {
   
   public var urlRequest: URLRequest {
-    let url = target.baseURL.appendingPathComponent(target.path)
+    let url     = target.baseURL.appendingPathComponent(target.path)
     var request = URLRequest(url: url)
     request.allHTTPHeaderFields = target.headers
     request.httpMethod = target.method.rawValue
@@ -35,9 +35,12 @@ public struct HTTPRequest {
   }
   
   public func appending(to request: URLRequest, byAuthorizable target: AccessTokenAuthorizable) -> URLRequest {
-    let headerKey = target.authorizationHeader
-    let prefix = target.authorizationType.value
+    guard target.authorizationType != .none else { return request }
+    
+    let headerKey         = target.authorizationHeader
+    let prefix            = target.authorizationType.value
     let headerValuePrefix = prefix.isEmpty ? prefix : prefix + " "
+    
     var request = ensureHeadersProperty(to: request)
     request.allHTTPHeaderFields?[headerKey] = "\(headerValuePrefix)"
     return request
@@ -55,13 +58,13 @@ public struct HTTPRequest {
   public func appending(parameters: Encodable,
                         encoding: Parameter.Encoding,
                         to request: URLRequest) -> URLRequest {
-    var request = request
+    var request      = request
     let anyEncodable = AnyEncodable(parameters)
     switch encoding {
     case .query:
-      let query = try? URLQueryEncoder().encode(anyEncodable)
+      let query     = try? URLQueryEncoder().encode(anyEncodable)
       let newString = (request.url?.absoluteString ?? "") + (query ?? "")
-      let newUrl = URL(string: newString)!
+      let newUrl    = URL(string: newString)!
       request.url = newUrl
     case .body(let type):
       switch type {
