@@ -6,7 +6,7 @@ import Foundation
 
 open class URLQueryEncoder {
   open func encode<T: Encodable>(_ value: T) throws -> String {
-    let encoder = URLQueryEncoding()
+    let encoder = StringMapEncoding()
     try value.encode(to: encoder)
     return queryString(dictionary: encoder.data.maps)
   }

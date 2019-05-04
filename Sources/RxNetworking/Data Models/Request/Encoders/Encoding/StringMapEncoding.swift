@@ -4,7 +4,8 @@
 
 import Foundation
 
-open class URLQueryEncoding: Encoder {
+/// Turns encodable into dictionary
+open class StringMapEncoding: Encoder {
   open internal(set) var codingPath: [CodingKey] = []
   open internal(set) var userInfo: [CodingUserInfoKey: Any] = [:]
   

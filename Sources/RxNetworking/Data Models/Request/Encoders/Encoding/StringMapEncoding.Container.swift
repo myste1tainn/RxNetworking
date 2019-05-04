@@ -4,7 +4,7 @@
 
 import Foundation
 
-extension URLQueryEncoding {
+extension StringMapEncoding {
   open class Container {
   }
 }

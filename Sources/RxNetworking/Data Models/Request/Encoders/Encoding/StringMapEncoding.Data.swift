@@ -4,7 +4,7 @@
 
 import Foundation
 
-extension URLQueryEncoding {
+extension StringMapEncoding {
   final class Data {
     
     private(set) var maps: [String: String] = [:]

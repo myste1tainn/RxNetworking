@@ -4,12 +4,12 @@
 
 import Foundation
 
-extension URLQueryEncoding {
+extension StringMapEncoding {
   public struct SingleValueContainer: SingleValueEncodingContainer {
     
-    private let data: URLQueryEncoding.Data
+    private let data: StringMapEncoding.Data
     
-    init(to data: URLQueryEncoding.Data, codingPath: [CodingKey]) {
+    init(to data: StringMapEncoding.Data, codingPath: [CodingKey]) {
       self.data = data
       self.codingPath = codingPath
     }
@@ -77,7 +77,7 @@ extension URLQueryEncoding {
     }
     
     public mutating func encode<T: Encodable>(_ value: T) throws {
-      let encoding = URLQueryEncoding(to: data)
+      let encoding = StringMapEncoding(to: data)
       encoding.codingPath = codingPath
       try value.encode(to: encoding)
     }
