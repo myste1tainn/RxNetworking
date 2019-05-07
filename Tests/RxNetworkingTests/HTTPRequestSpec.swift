@@ -13,6 +13,22 @@ final class HTTPRequestSpec: QuickSpec {
       
       }
       
+      context("target is form-data") {
+        beforeEach {
+          httpRequest = .init(target: CustomHeaderAuthorizableTarget.accessToken)
+        }
+        
+        describe("#urlReqeust") {
+          it("add form-data content-type") {
+            let request = httpRequest.urlRequest
+            expect(request.allHTTPHeaderFields?.keys).to(contain("Content-Type"))
+            let header = request.allHTTPHeaderFields?.first { $0.key == "Content-Type" }
+            expect(header?.value) == "multipart/form-data"
+          }
+        }
+      }
+    }
+      
       context("target is AccessTokenAuthorizable") {
         
         beforeEach {
@@ -76,77 +92,77 @@ final class HTTPRequestSpec: QuickSpec {
             }
             
           }
-        }
+
         
       }
       
       context("target is CustomHeaderAccessTokenAuthorizable") {
-  
+        
         let headerKey = "X-Custom-Header"
         beforeEach {
           CustomHeaderAuthorizableTarget.authorizationHeader = headerKey
           httpRequest = .init(target: CustomHeaderAuthorizableTarget.posts(.get))
         }
-    
+        
         describe("#urlRequest") {
-      
+          
           context("required basic auth") {
             beforeEach {
               CustomHeaderAuthorizableTarget.authorizationType = .basic
             }
-        
+            
             it("add authorization basic to header") {
               let request = httpRequest.urlRequest
               expect(request.allHTTPHeaderFields?.keys).to(contain(headerKey))
               let header = request.allHTTPHeaderFields?.first { $0.key == headerKey }
               expect(header?.value).to(contain("Basic "))
             }
-        
+            
           }
-      
+          
           context("required bearer auth") {
             beforeEach {
               CustomHeaderAuthorizableTarget.authorizationType = .bearer
             }
-        
+            
             it("add authorization basic to header") {
               let request = httpRequest.urlRequest
               expect(request.allHTTPHeaderFields?.keys).to(contain(headerKey))
               let header = request.allHTTPHeaderFields?.first { $0.key == headerKey }
               expect(header?.value).to(contain("Bearer "))
             }
-        
+            
           }
-      
+          
           context("required custom value auth") {
             beforeEach {
               CustomHeaderAuthorizableTarget.authorizationType = .custom("Prefix")
             }
-        
+            
             it("add authorization basic to header") {
               let request = httpRequest.urlRequest
               expect(request.allHTTPHeaderFields?.keys).to(contain(headerKey))
               let header = request.allHTTPHeaderFields?.first { $0.key == headerKey }
               expect(header?.value).to(contain("Prefix "))
             }
-        
+            
           }
-      
+          
           context("required custom empty auth") {
             beforeEach {
               CustomHeaderAuthorizableTarget.authorizationType = .custom("")
             }
-        
+            
             it("add authorization basic to header") {
               let request = httpRequest.urlRequest
               expect(request.allHTTPHeaderFields?.keys).to(contain(headerKey))
               let header = request.allHTTPHeaderFields?.first { $0.key == headerKey }
               expect(header?.value) == ""
             }
-        
+            
           }
         }
-    
+        
       }
       
     }
@@ -169,6 +185,7 @@ final class HTTPRequestSpec: QuickSpec {
       }
     }
     
+    case accessToken
     case profile(_ method: Method)
     case posts(_ method: Method)
     case comments(_ method: Method)
@@ -186,11 +203,15 @@ final class HTTPRequestSpec: QuickSpec {
     }
     
     var baseURL: URL {
-      return URL(string: "http://localhost:3000")!
+      switch self {
+      case .accessToken: return URL(string: "http://testapi.mycloudfulfillment.com")!
+      default: return URL(string: "http://localhost:3000")!
+      }
     }
     
     var pathName: String {
       switch self {
+      case .accessToken: return ""
       case .profile: return "profile"
       case .posts: return "posts"
       case .comments: return "comments"
@@ -200,6 +221,7 @@ final class HTTPRequestSpec: QuickSpec {
     var path: String {
       let base = pathName
       switch self {
+      case .accessToken: return "api/v1/gettoken"
       case .profile(let method),
            .posts(let method),
            .comments(let method):
@@ -210,8 +232,9 @@ final class HTTPRequestSpec: QuickSpec {
       }
     }
     
-    var method: HTTPMethod {
+    var method:  HTTPMethod {
       switch self {
+      case .accessToken: return .get
       case .profile(let method),
            .comments(let method),
            .posts(let method): return method.httpMethod
@@ -220,8 +243,14 @@ final class HTTPRequestSpec: QuickSpec {
     var headers: [String: String] {
       return [:]
     }
+    
     var task: Task {
       switch self {
+      case .accessToken:
+        let id     = "53808f0e5cb54e118ad8296a28a34b92"
+        let secret = "cdd1c91bd6a544289763c19376fa2e7e135964321b064361"
+        return .parametered(with: AccessTokenRequest(id: id, secret: secret),
+                            encoding: .body(contentType: .form(.data)))
       case .profile(let method),
            .comments(let method),
            .posts(let method):
@@ -286,7 +315,7 @@ final class HTTPRequestSpec: QuickSpec {
       }
     }
     
-    var method: HTTPMethod {
+    var method:  HTTPMethod {
       switch self {
       case .profile(let method),
            .comments(let method),
@@ -296,7 +325,7 @@ final class HTTPRequestSpec: QuickSpec {
     var headers: [String: String] {
       return [:]
     }
-    var task: Task {
+    var task:    Task {
       switch self {
       case .profile(let method),
            .comments(let method),
@@ -311,14 +340,24 @@ final class HTTPRequestSpec: QuickSpec {
   }
   
   struct Post: Encodable {
-    var id: Int?
-    var title: String?
+    var id:        Int?
+    var title:     String?
     var createdAt: Date?
     
     enum CodingKeys: CodingKey {
       case id
       case title
       case createdAt
+    }
+  }
+  
+  struct AccessTokenRequest: Encodable {
+    var id:     String
+    var secret: String
+    
+    enum CodingKeys: String, CodingKey {
+      case id     = "apikey"
+      case secret = "secretkey"
     }
   }
 }
