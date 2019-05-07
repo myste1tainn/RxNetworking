@@ -6,6 +6,11 @@ import Foundation
 import RxSwift
 
 public class LoggerPlugin: PluginType {
+  
+  public init() {
+  
+  }
+  
   public func willSend(httpRequest: HTTPRequest, request: URLRequest) throws -> Single<URLRequest> {
     return Single.just(request)
                  .do(onSuccess: { print($0.curlString) })
