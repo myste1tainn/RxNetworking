@@ -5,7 +5,11 @@
 import Foundation
 
 open class FormDataEncoder {
-  open func encode<T: Encodable>(_ value: T) throws -> String {
+  open func encode<T: Encodable>(_ value: T) throws -> Data {
+    return try encodeString(value).data(using: .ascii) ?? Data()
+  }
+  
+  func encodeString<T: Encodable>(_ value: T) throws -> String {
     let encoder = StringMapEncoding()
     try value.encode(to: encoder)
     return formDataString(dictionary: encoder.data.maps)
@@ -14,14 +18,13 @@ open class FormDataEncoder {
   private func formDataString(dictionary: [String: String]) -> String {
     let uuidString = UUID().uuidString
     let boundary   = "rxnetworking.boundary.\(uuidString)"
-    let string = dictionary.sorted { $0.key < $1.key }
-                           .map(componentStringWithKeyValueBy(boundary: boundary))
-                           .reduce("?") { $0 + "\($1)&" }
-                           .dropLast()
+    let body = dictionary.sorted { $0.key < $1.key }
+                         .map(componentStringWithKeyValueBy(boundary: boundary))
+                         .reduce("?") { $0 + "\($1)&" }
+                         .dropLast()
     return """
            \(boundary)
-           \(string)
-           --\(boundary)--
+           \(body)
            """
   }
   
@@ -32,11 +35,11 @@ open class FormDataEncoder {
   }
   
   private func componentString(key: String, value: String, boundary: String) -> String {
-    let safeValue = value.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? ""
+    let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? ""
     return """
            Content-Disposition: form-data; name="\(key)"
             
-           \(safeValue)
+           \(encodedValue)
            --\(boundary)--
            """
   }

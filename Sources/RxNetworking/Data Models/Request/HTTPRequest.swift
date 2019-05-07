@@ -67,18 +67,23 @@ public struct HTTPRequest {
       let newUrl    = URL(string: newString)!
       request.url = newUrl
     case .body(let type):
+      request.set(key: "Content-Type", value: type.value)
       switch type {
-      case .json:
-        let body = try? JSONEncoder().encode(anyEncodable)
-        if request.allHTTPHeaderFields == nil {
-          request.allHTTPHeaderFields = [:]
-        }
-        request.allHTTPHeaderFields?["Content-Type"] = type.value
-        request.httpBody = body
+      case .json: request.httpBody = try? JSONEncoder().encode(anyEncodable)
+      case .form: request.httpBody = try? FormDataEncoder().encode(anyEncodable)
       default:
         return request
       }
     }
     return request
+  }
+}
+
+extension URLRequest {
+  mutating func set(key: String, value: String) {
+    if allHTTPHeaderFields == nil {
+      allHTTPHeaderFields = [:]
+    }
+    allHTTPHeaderFields?[key] = value
   }
 }

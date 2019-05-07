@@ -31,19 +31,19 @@ public enum HTTPContentType {
     case .html: return "text/\(self.name)"
     case .form(let type):
       switch type {
-      case .data: return ""
-      case .urlEncoded: return "application/\(self.name)"
+      case .data: return "multipart/\(type.rawValue)"
+      case .urlEncoded: return "application/\(type.rawValue)"
       }
     }
   }
   
   public enum SubType: String {
-    case text = "text"
+    case text        = "text"
     case application = "application"
   }
   
   public enum FormSubType: String {
-    case urlEncoded
-    case data
+    case urlEncoded = "x-www-form-urlencoded"
+    case data       = "form-data"
   }
 }

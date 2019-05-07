@@ -8,17 +8,17 @@ import RxSwift
 public class LoggerPlugin: PluginType {
   public func willSend(httpRequest: HTTPRequest, request: URLRequest) throws -> Single<URLRequest> {
     return Single.just(request)
-                 .do(onNext: { print($0.description) })
+                 .do(onSuccess: { print($0.curlString) })
   }
   
   public func didSend(request: URLRequest, received response: HTTPResponse) throws -> Single<HTTPResponse> {
     return Single.just(response)
-                 .do(onNext: { print($0) })
+                 .do(onSuccess: { print($0) })
   }
 }
 
-extension URLRequest: CustomStringConvertible {
-  public var description: String {
+extension URLRequest {
+  public var curlString: String {
     let data = self.httpBody ?? Data()
     let headers = self.allHTTPHeaderFields?.enumerated().reduce("") {
       let base = "-H '\($1.element.key): \($1.element.value)'"
