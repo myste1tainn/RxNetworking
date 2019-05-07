@@ -6,14 +6,18 @@ import RxSwift
 
 final class HTTPClientSpec: QuickSpec {
   override func spec() {
+    // TODO: killall is too drastic, will have to find it's pid and kill it that way.
     shell("killall", "-9", "node")
     shell("rm", "-rf", "db.json")
     exec("json-server", "db.json")
     sleep(1)
-    var client: HTTPClient<TestTarget>!
+    var client: HTTPClient<CustomHeaderAuthorizableTarget>!
     let bag = DisposeBag()
     describe("HTTPClient") {
-      beforeEach { client = .init() }
+      beforeEach { client = .init(plugins: [
+        AccessTokenPlugin(tokenSingle: .just("TOKEN_TEST")),
+        LoggerPlugin()
+      ]) }
       
       context("POST posts") {
         it("make request ok-ish") {
@@ -42,6 +46,19 @@ final class HTTPClientSpec: QuickSpec {
         }
       }
       
+      context("GET access token") {
+        it("contains access token") {
+          client.request(.accessToken)
+                .expectation(bag: bag) {
+                  expect($0.statusCode) > 199
+                  expect($0.statusCode) < 300
+                  let string = String(data: $0.data, encoding: .utf8)
+                  expect(string).toNot(beNil())
+                  expect(string).to(contain("\"token\":"))
+                }
+        }
+      }
+      
       context("DELETE posts") {
         it("remove specified item") {
           client.request(.posts(.delete("2")))
@@ -58,7 +75,16 @@ final class HTTPClientSpec: QuickSpec {
     }
   }
   
-  enum TestTarget: TargetType {
+  enum TestTarget: AccessTokenAuthorizable {
+    
+    var authorizationHeader: String {
+      return "X-Myste1tainn-Token"
+    }
+    
+    var authorizationType: AuthorizationType {
+      return .custom("Myste1tainn")
+    }
+  
     enum Method {
       case get
       case put(_ id: String)

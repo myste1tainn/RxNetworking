@@ -4,9 +4,13 @@
 
 import Foundation
 
-public class URLQueryEncoder {
-  public func encode<T: Encodable>(_ value: T) throws -> String {
-    let encoder = URLQueryEncoding()
+open class URLQueryEncoder {
+  open func encode<T: Encodable>(_ value: T) throws -> Data {
+    return try encodeString(value).data(using: .ascii) ?? Data()
+  }
+  
+  open func encodeString<T: Encodable>(_ value: T) throws -> String {
+    let encoder = StringMapEncoding()
     try value.encode(to: encoder)
     return queryString(dictionary: encoder.data.maps)
   }

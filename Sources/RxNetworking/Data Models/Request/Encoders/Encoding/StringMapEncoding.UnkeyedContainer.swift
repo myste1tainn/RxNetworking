@@ -4,15 +4,15 @@
 
 import Foundation
 
-extension URLQueryEncoding {
+extension StringMapEncoding {
   public struct UnkeyedContainer: UnkeyedEncodingContainer {
-    private let data: URLQueryEncoding.Data
+    private let data: StringMapEncoding.Data
     
     public var codingPath: [CodingKey] = []
     
     public var count: Int = 0
     
-    init(to data: URLQueryEncoding.Data, codingPath: [CodingKey] = []) {
+    init(to data: StringMapEncoding.Data, codingPath: [CodingKey] = []) {
       self.data = data
       self.codingPath = codingPath
     }
@@ -98,7 +98,7 @@ extension URLQueryEncoding {
     }
     
     public mutating func encode<T: Encodable>(_ value: T) throws {
-      let encoder = URLQueryEncoding(to: data, codingPath: codingPath + [nextIndexedKey()])
+      let encoder = StringMapEncoding(to: data, codingPath: codingPath + [nextIndexedKey()])
       try value.encode(to: encoder)
     }
     
@@ -111,7 +111,7 @@ extension URLQueryEncoding {
     }
     
     public mutating func superEncoder() -> Encoder {
-      let encoding = URLQueryEncoding(to: data)
+      let encoding = StringMapEncoding(to: data)
       encoding.codingPath.append(nextIndexedKey())
       return encoding
     }
