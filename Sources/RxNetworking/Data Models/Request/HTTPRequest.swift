@@ -62,7 +62,7 @@ public struct HTTPRequest {
     let anyEncodable = AnyEncodable(parameters)
     switch encoding {
     case .query:
-      let query     = try? URLQueryEncoder().encode(anyEncodable)
+      let query     = try? URLQueryEncoder().encodeString(anyEncodable)
       let newString = (request.url?.absoluteString ?? "") + (query ?? "")
       let newUrl    = URL(string: newString)!
       request.url = newUrl
@@ -70,14 +70,24 @@ public struct HTTPRequest {
       request.set(key: "Content-Type", value: type.value)
       switch type {
       case .json: request.httpBody = try? JSONEncoder().encode(anyEncodable)
-      case .form: request.httpBody = try? FormDataEncoder().encode(anyEncodable)
-      default:
-        return request
+      case .form(let subtype):
+        switch subtype {
+        case .urlEncoded: request.httpBody = try? URLQueryEncoder().encode(anyEncodable)
+        case .data:
+          guard let boundary = subtype.boundary,
+                let headerValue = request.allHTTPHeaderFields?["Content-Type"] else {
+            return request
+          }
+          request.allHTTPHeaderFields?["Content-Type"] = "\(headerValue); boundary=\(boundary)"
+          request.httpBody = try? FormDataEncoder(boundary: boundary).encode(anyEncodable)
+        }
+      default: return request
       }
     }
     return request
   }
 }
+
 
 extension URLRequest {
   mutating func set(key: String, value: String) {

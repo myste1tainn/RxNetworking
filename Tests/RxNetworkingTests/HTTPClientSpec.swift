@@ -11,7 +11,7 @@ final class HTTPClientSpec: QuickSpec {
     shell("rm", "-rf", "db.json")
     exec("json-server", "db.json")
     sleep(1)
-    var client: HTTPClient<TestTarget>!
+    var client: HTTPClient<CustomHeaderAuthorizableTarget>!
     let bag = DisposeBag()
     describe("HTTPClient") {
       beforeEach { client = .init(plugins: [
@@ -42,6 +42,19 @@ final class HTTPClientSpec: QuickSpec {
                   let string = String(data: $0.data, encoding: .utf8)
                   expect(string).toNot(beNil())
                   expect(string).to(contain("\"id\": 2"))
+                }
+        }
+      }
+      
+      context("GET access token") {
+        it("contains access token") {
+          client.request(.accessToken)
+                .expectation(bag: bag) {
+                  expect($0.statusCode) > 199
+                  expect($0.statusCode) < 300
+                  let string = String(data: $0.data, encoding: .utf8)
+                  expect(string).toNot(beNil())
+                  expect(string).to(contain("\"token\":"))
                 }
         }
       }

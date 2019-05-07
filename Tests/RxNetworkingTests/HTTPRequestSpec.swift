@@ -23,76 +23,76 @@ final class HTTPRequestSpec: QuickSpec {
             let request = httpRequest.urlRequest
             expect(request.allHTTPHeaderFields?.keys).to(contain("Content-Type"))
             let header = request.allHTTPHeaderFields?.first { $0.key == "Content-Type" }
-            expect(header?.value) == "multipart/form-data"
+            expect(header?.value).to(contain("multipart/form-data; boundary="))
           }
         }
       }
     }
+    
+    context("target is AccessTokenAuthorizable") {
       
-      context("target is AccessTokenAuthorizable") {
+      beforeEach {
+        httpRequest = .init(target: AuthorizableTarget.posts(.get))
+      }
+      
+      describe("#urlRequest") {
         
-        beforeEach {
-          httpRequest = .init(target: AuthorizableTarget.posts(.get))
+        context("required basic auth") {
+          beforeEach {
+            AuthorizableTarget.authorizationType = .basic
+          }
+          
+          it("add authorization basic to header") {
+            let request = httpRequest.urlRequest
+            expect(request.allHTTPHeaderFields?.keys).to(contain("Authorization"))
+            let header = request.allHTTPHeaderFields?.first { $0.key == "Authorization" }
+            expect(header?.value).to(contain("Basic "))
+          }
+          
         }
         
-        describe("#urlRequest") {
-          
-          context("required basic auth") {
-            beforeEach {
-              AuthorizableTarget.authorizationType = .basic
-            }
-            
-            it("add authorization basic to header") {
-              let request = httpRequest.urlRequest
-              expect(request.allHTTPHeaderFields?.keys).to(contain("Authorization"))
-              let header = request.allHTTPHeaderFields?.first { $0.key == "Authorization" }
-              expect(header?.value).to(contain("Basic "))
-            }
-            
+        context("required bearer auth") {
+          beforeEach {
+            AuthorizableTarget.authorizationType = .bearer
           }
           
-          context("required bearer auth") {
-            beforeEach {
-              AuthorizableTarget.authorizationType = .bearer
-            }
-            
-            it("add authorization basic to header") {
-              let request = httpRequest.urlRequest
-              expect(request.allHTTPHeaderFields?.keys).to(contain("Authorization"))
-              let header = request.allHTTPHeaderFields?.first { $0.key == "Authorization" }
-              expect(header?.value).to(contain("Bearer "))
-            }
-            
+          it("add authorization basic to header") {
+            let request = httpRequest.urlRequest
+            expect(request.allHTTPHeaderFields?.keys).to(contain("Authorization"))
+            let header = request.allHTTPHeaderFields?.first { $0.key == "Authorization" }
+            expect(header?.value).to(contain("Bearer "))
           }
           
-          context("required custom value auth") {
-            beforeEach {
-              AuthorizableTarget.authorizationType = .custom("Prefix")
-            }
-            
-            it("add authorization basic to header") {
-              let request = httpRequest.urlRequest
-              expect(request.allHTTPHeaderFields?.keys).to(contain("Authorization"))
-              let header = request.allHTTPHeaderFields?.first { $0.key == "Authorization" }
-              expect(header?.value).to(contain("Prefix "))
-            }
-            
+        }
+        
+        context("required custom value auth") {
+          beforeEach {
+            AuthorizableTarget.authorizationType = .custom("Prefix")
           }
           
-          context("required custom empty auth") {
-            beforeEach {
-              AuthorizableTarget.authorizationType = .custom("")
-            }
-            
-            it("add authorization basic to header") {
-              let request = httpRequest.urlRequest
-              expect(request.allHTTPHeaderFields?.keys).to(contain("Authorization"))
-              let header = request.allHTTPHeaderFields?.first { $0.key == "Authorization" }
-              expect(header?.value) == ""
-            }
-            
+          it("add authorization basic to header") {
+            let request = httpRequest.urlRequest
+            expect(request.allHTTPHeaderFields?.keys).to(contain("Authorization"))
+            let header = request.allHTTPHeaderFields?.first { $0.key == "Authorization" }
+            expect(header?.value).to(contain("Prefix "))
           }
-
+          
+        }
+        
+        context("required custom empty auth") {
+          beforeEach {
+            AuthorizableTarget.authorizationType = .custom("")
+          }
+          
+          it("add authorization basic to header") {
+            let request = httpRequest.urlRequest
+            expect(request.allHTTPHeaderFields?.keys).to(contain("Authorization"))
+            let header = request.allHTTPHeaderFields?.first { $0.key == "Authorization" }
+            expect(header?.value) == ""
+          }
+          
+        }
+        
         
       }
       
@@ -168,100 +168,6 @@ final class HTTPRequestSpec: QuickSpec {
     }
   }
   
-  enum CustomHeaderAuthorizableTarget: AccessTokenAuthorizable {
-    enum Method {
-      case get
-      case put(_ id: String)
-      case post(_ body: Encodable)
-      case delete(_ id: String)
-      
-      var httpMethod: HTTPMethod {
-        switch self {
-        case .get: return .get
-        case .put: return .put
-        case .post: return .post
-        case .delete: return .delete
-        }
-      }
-    }
-    
-    case accessToken
-    case profile(_ method: Method)
-    case posts(_ method: Method)
-    case comments(_ method: Method)
-    
-    static var authorizationType = AuthorizationType.basic
-    
-    static var authorizationHeader = "Authorization"
-    
-    var authorizationHeader: String {
-      return type(of: self).authorizationHeader
-    }
-    
-    var authorizationType: AuthorizationType {
-      return type(of: self).authorizationType
-    }
-    
-    var baseURL: URL {
-      switch self {
-      case .accessToken: return URL(string: "http://testapi.mycloudfulfillment.com")!
-      default: return URL(string: "http://localhost:3000")!
-      }
-    }
-    
-    var pathName: String {
-      switch self {
-      case .accessToken: return ""
-      case .profile: return "profile"
-      case .posts: return "posts"
-      case .comments: return "comments"
-      }
-    }
-    
-    var path: String {
-      let base = pathName
-      switch self {
-      case .accessToken: return "api/v1/gettoken"
-      case .profile(let method),
-           .posts(let method),
-           .comments(let method):
-        switch method {
-        case .get, .post: return base
-        case .delete(let id), .put(let id): return "\(base)/\(id)"
-        }
-      }
-    }
-    
-    var method:  HTTPMethod {
-      switch self {
-      case .accessToken: return .get
-      case .profile(let method),
-           .comments(let method),
-           .posts(let method): return method.httpMethod
-      }
-    }
-    var headers: [String: String] {
-      return [:]
-    }
-    
-    var task: Task {
-      switch self {
-      case .accessToken:
-        let id     = "53808f0e5cb54e118ad8296a28a34b92"
-        let secret = "cdd1c91bd6a544289763c19376fa2e7e135964321b064361"
-        return .parametered(with: AccessTokenRequest(id: id, secret: secret),
-                            encoding: .body(contentType: .form(.data)))
-      case .profile(let method),
-           .comments(let method),
-           .posts(let method):
-        switch method {
-        case .get: return .plain
-        case .post(let body): return .parametered(with: body, encoding: .body(contentType: .json))
-        default: return .plain
-        }
-      }
-    }
-  }
   
   enum AuthorizableTarget: AccessTokenAuthorizable {
     enum Method {
@@ -351,13 +257,112 @@ final class HTTPRequestSpec: QuickSpec {
     }
   }
   
-  struct AccessTokenRequest: Encodable {
-    var id:     String
-    var secret: String
+}
+
+enum CustomHeaderAuthorizableTarget: AccessTokenAuthorizable {
+  enum Method {
+    case get
+    case put(_ id: String)
+    case post(_ body: Encodable)
+    case delete(_ id: String)
     
-    enum CodingKeys: String, CodingKey {
-      case id     = "apikey"
-      case secret = "secretkey"
+    var httpMethod: HTTPMethod {
+      switch self {
+      case .get: return .get
+      case .put: return .put
+      case .post: return .post
+      case .delete: return .delete
+      }
     }
+  }
+  
+  case accessToken
+  case profile(_ method: Method)
+  case posts(_ method: Method)
+  case comments(_ method: Method)
+  
+  static var authorizationType = AuthorizationType.basic
+  
+  static var authorizationHeader = "Authorization"
+  
+  var authorizationHeader: String {
+    return type(of: self).authorizationHeader
+  }
+  
+  var authorizationType: AuthorizationType {
+    switch self {
+    case .accessToken: return .none
+    default: return type(of: self).authorizationType
+    }
+  }
+  
+  var baseURL: URL {
+    switch self {
+    case .accessToken: return URL(string: "http://testapi.mycloudfulfillment.com")!
+    default: return URL(string: "http://localhost:3000")!
+    }
+  }
+  
+  var pathName: String {
+    switch self {
+    case .accessToken: return ""
+    case .profile: return "profile"
+    case .posts: return "posts"
+    case .comments: return "comments"
+    }
+  }
+  
+  var path: String {
+    let base = pathName
+    switch self {
+    case .accessToken: return "api/v1/gettoken"
+    case .profile(let method),
+         .posts(let method),
+         .comments(let method):
+      switch method {
+      case .get, .post: return base
+      case .delete(let id), .put(let id): return "\(base)/\(id)"
+      }
+    }
+  }
+  
+  var method:  HTTPMethod {
+    switch self {
+    case .accessToken: return .post
+    case .profile(let method),
+         .comments(let method),
+         .posts(let method): return method.httpMethod
+    }
+  }
+  var headers: [String: String] {
+    return [:]
+  }
+  
+  var task: Task {
+    switch self {
+    case .accessToken:
+      let id     = "53808f0e5cb54e118ad8296a28a34b92"
+      let secret = "cdd1c91bd6a544289763c19376fa2e7e135964321b064361"
+      return .parametered(with: AccessTokenRequest(id: id, secret: secret),
+                          encoding: .body(contentType: .form(.data)))
+    case .profile(let method),
+         .comments(let method),
+         .posts(let method):
+      switch method {
+      case .get: return .plain
+      case .post(let body): return .parametered(with: body, encoding: .body(contentType: .json))
+      default: return .plain
+      }
+    }
+  }
+}
+
+struct AccessTokenRequest: Encodable {
+  var id:     String
+  var secret: String
+  
+  enum CodingKeys: String, CodingKey {
+    case id     = "apikey"
+    case secret = "secretkey"
   }
 }

@@ -5,6 +5,12 @@
 import Foundation
 
 open class FormDataEncoder {
+  let boundary: String
+  
+  init(boundary: String) {
+    self.boundary = boundary
+  }
+  
   open func encode<T: Encodable>(_ value: T) throws -> Data {
     return try encodeString(value).data(using: .ascii) ?? Data()
   }
@@ -16,15 +22,13 @@ open class FormDataEncoder {
   }
   
   private func formDataString(dictionary: [String: String]) -> String {
-    let uuidString = UUID().uuidString
-    let boundary   = "rxnetworking.boundary.\(uuidString)"
     let body = dictionary.sorted { $0.key < $1.key }
                          .map(componentStringWithKeyValueBy(boundary: boundary))
-                         .reduce("?") { $0 + "\($1)&" }
+                         .reduce("") { $0 + "\($1)\n" }
                          .dropLast()
     return """
-           \(boundary)
            \(body)
+           --\(boundary)--
            """
   }
   
@@ -37,10 +41,10 @@ open class FormDataEncoder {
   private func componentString(key: String, value: String, boundary: String) -> String {
     let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? ""
     return """
+           --\(boundary)
            Content-Disposition: form-data; name="\(key)"
-            
+           
            \(encodedValue)
-           --\(boundary)--
            """
   }
   

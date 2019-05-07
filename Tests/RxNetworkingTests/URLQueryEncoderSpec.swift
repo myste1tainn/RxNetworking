@@ -16,7 +16,7 @@ final class URLQueryEncoderSpec: QuickSpec {
           var result: String!
           beforeEach {
             let parameters = Parameters.init(firstname: "A", lastname: "K")
-            result = try! encoder.encode(parameters)
+            result = try! encoder.encodeString(parameters)
           }
   
           it("returns query string") {
@@ -30,7 +30,7 @@ final class URLQueryEncoderSpec: QuickSpec {
             let parameters = NestedParameters(age: 10,
                                               birthDate: "2019/03/1990",
                                               user: .init(firstname: "A", lastname: "K"))
-            result = try! encoder.encode(parameters)
+            result = try! encoder.encodeString(parameters)
           }
     
           it("returns flatten query string") {

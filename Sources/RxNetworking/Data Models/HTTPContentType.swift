@@ -45,5 +45,14 @@ public enum HTTPContentType {
   public enum FormSubType: String {
     case urlEncoded = "x-www-form-urlencoded"
     case data       = "form-data"
+    
+    var boundary: String? {
+      switch self {
+      case .data:
+        let uuidString = UUID().uuidString.replacingOccurrences(of: "-", with: "")
+        return "rxnetworking.boundary.\(uuidString)"
+      default: return nil
+      }
+    }
   }
 }
